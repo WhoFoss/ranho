@@ -86,6 +86,9 @@ echo "[OK] MGLRU min_ttl_ms = 2000"
 su -c "settings put secure icon_blacklist airplane"
 echo "[OK] Icone do modo avião foi ocultado"
 
+su -c "settings put global disable_window_blurs 0"
+echo "[OK] Blur habilitado"
+
 su -c 'settings put global window_animation_scale 0.5'
 su -c 'settings put global transition_animation_scale 0.5'
 su -c 'settings put global animator_duration_scale 0.5'
