@@ -83,5 +83,8 @@ echo "[OK] MGLRU config all"
 su -c "echo 2000 > /sys/kernel/mm/lru_gen/min_ttl_ms"
 echo "[OK] MGLRU min_ttl_ms = 2000"
 
+su -c "settings put secure icon_blacklist airplane"
+echo "[OK] Icone do modo avião foi ocultado"
+
 echo "[LowRAM] Script finalizado com sucesso."
 exit 0
