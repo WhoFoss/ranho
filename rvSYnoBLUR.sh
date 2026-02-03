@@ -1,6 +1,4 @@
 #!/system/bin/sh
-# LowLag SystemUI / Control Center Focus
-# Filosofia: menos efeito, mais frame estável
 
 exec su -c sh <<'EOF'
 
