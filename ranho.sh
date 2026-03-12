@@ -1,98 +1,71 @@
 #!/system/bin/sh
 
-echo "[LowRAM] === Rádio / Logs / Qualcomm ==="
-su -c "resetprop persist.vendor.radio.add_power_save 1"
-echo "[OK] radio power save"
+exec su -c sh <<'EOF'
 
-su -c "resetprop persist.vendor.console.silent.config 1"
-echo "[OK] vendor console silent"
+echo "[Optimized] === Rádio / Qualcomm ==="
+resetprop persist.vendor.radio.add_power_save 1
+resetprop persist.vendor.console.silent.config 1
+resetprop persist.vendor.qcomsysd.enabled 0
 
-su -c "resetprop persist.vendor.qcomsysd.enabled 0"
-echo "[OK] qcomsysd desativado"
 
-echo "[LowRAM] === Blur / UI / Scroll ==="
-su -c "resetprop ro.sf.blurs_are_expensive 1"
-echo "[OK] blur marcado como caro"
+echo "[Optimized] === Memória (MGLRU) ==="
+setprop persist.device_config.mglru_native.lru_gen_config all
+echo 2000 > /sys/kernel/mm/lru_gen/min_ttl_ms
 
-su -c "resetprop ro.surface_flinger.supports_background_blur 1"
-echo "[OK] suporte a blur do SF"
 
-su -c "resetprop ro.launcher.blur.appLaunch 0"
-echo "[OK] blur no launch desativado"
+echo "[Optimized] === MIUI Scheduler ==="
+setprop persist.sys.turbosched.enable true
+setprop persist.sys.hyper_transition true
+setprop persist.sys.miui_animator_sched.big_prime_cores true
 
-su -c "resetprop ro.vendor.perf.scroll_opt true"
-echo "[OK] scroll optimization"
 
-echo "[LowRAM] === SurfaceFlinger Timing ==="
-su -c "resetprop debug.sf.early_phase_offset_ns 11600000"
-echo "[OK] early_phase_offset"
+echo "[Optimized] === MIUI Performance Levels ==="
+service call miui.mqsas.IMQSNative 21 i32 1 s16 "setprop" i32 1 s16 "persist.sys.computility.cpulevel 6" s16 "/storage/emulated/0/log.txt" i32 600
+service call miui.mqsas.IMQSNative 21 i32 1 s16 "setprop" i32 1 s16 "persist.sys.computility.gpulevel 6" s16 "/storage/emulated/0/log.txt" i32 600
 
-su -c "resetprop debug.sf.early_app_phase_offset_ns 11600000"
-echo "[OK] early_app_phase_offset"
 
-su -c "resetprop debug.sf.early_gl_phase_offset_ns 3000000"
-echo "[OK] early_gl_phase_offset"
+echo "[Optimized] === SurfaceFlinger ==="
+resetprop debug.sf.disable_backpressure 1
+resetprop debug.sf.latch_unsignaled 1
+resetprop debug.sf.use_phase_offsets_as_durations 1
 
-su -c "resetprop debug.sf.early_gl_app_phase_offset_ns 15000000"
-echo "[OK] early_gl_app_phase_offset"
 
-su -c "resetprop debug.sf.phase_offset_threshold_for_next_vsync_ns 11600000"
-echo "[OK] vsync threshold"
+echo "[Optimized] === SystemUI ==="
+cmd appops set com.android.systemui RUN_IN_BACKGROUND allow
+settings put secure icon_blacklist airplane
 
-echo "[LowRAM] === Background / LowRAM ==="
-su -c "resetprop ro.vendor.qti.sys.fw.bg_apps_limit 600"
-echo "[OK] bg apps limit vendor"
 
-su -c "resetprop ro.config.low_ram true"
-echo "[OK] low_ram mode"
+echo "[Optimized] === UI / Visual Engine ==="
 
-su -c "resetprop ro.sys.fw.bg_apps_limit 48"
-echo "[OK] bg apps limit system"
+service call miui.mqsas.IMQSNative 21 i32 1 s16 "setprop" i32 1 s16 "persist.sys.advanced_visual_release 3" s16 "/storage/emulated/0/log.txt" i32 600
 
-su -c "resetprop ro.sys.fw.use_trim_settings true"
-echo "[OK] trim agressivo"
+settings put global disable_window_blurs 1
+settings put secure reduce_motion 1
+settings put global accessibility_reduce_transparency 1
 
-echo "[LowRAM] === LMK / Thrashing ==="
-su -c "resetprop ro.lmk.use_minfree_levels true"
-echo "[OK] LMK minfree"
+# Possível conflito com disable_window_blurs
+# setprop persist.sys.background_blur_supported true
+# setprop persist.sys.background_blur_setting 2
 
-su -c "resetprop ro.lmk.thrashing_limit 30"
-echo "[OK] thrashing limit"
 
-su -c "resetprop ro.lmk.thrashing_limit_decay 50"
-echo "[OK] thrashing decay"
+echo "[Optimized] === HWUI ==="
 
-echo "[LowRAM] === ZRAM ==="
-su -c "resetprop ro.zram.mark_idle_delay_mins 30"
-echo "[OK] zram idle delay"
+# Flag antiga — geralmente ignorada nas versões modernas do Android
+# setprop persist.sys.hwui.enable_texture_optimize true
 
-su -c "resetprop ro.zram.first_wb_delay_mins 60"
-echo "[OK] zram first writeback"
 
-echo "[LowRAM] === Display / SurfaceFlinger ==="
-su -c "resetprop ro.sf.lcd_density 320"
-echo "[OK] lcd density ajustada"
+echo "[Optimized] === Animações ==="
+settings put global window_animation_scale 0.5
+settings put global transition_animation_scale 0.5
+settings put global animator_duration_scale 0.5
 
-su -c "resetprop debug.sf.disable_backpressure 1"
-echo "[OK] backpressure desativado"
 
-echo "[LowRAM] === MGLRU ==="
-su -c "setprop persist.device_config.mglru_native.lru_gen_config all"
-echo "[OK] MGLRU config all"
+echo "[Optimized] === Apps em Background ==="
+setprop persist.sys.mms.bg_apps_limit 48
+setprop persist.sys.mmms.reclaim_switch 0
 
-su -c "echo 2000 > /sys/kernel/mm/lru_gen/min_ttl_ms"
-echo "[OK] MGLRU min_ttl_ms = 2000"
 
-su -c "settings put secure icon_blacklist airplane"
-echo "[OK] Icone do modo avião foi ocultado"
+echo "[Optimized] Script aplicado com sucesso."
 
-su -c "settings put global disable_window_blurs 0"
-echo "[OK] Blur habilitado"
-
-su -c 'settings put global window_animation_scale 0.5'
-su -c 'settings put global transition_animation_scale 0.5'
-su -c 'settings put global animator_duration_scale 0.5'
-echo "[Ok] Animações em 0.5"
-
-echo "[LowRAM] Script finalizado com sucesso."
 exit 0
+EOF
